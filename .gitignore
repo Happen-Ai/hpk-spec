@@ -1,0 +1,36 @@
+# HPK build artifacts
+*.hpk
+
+# OpenTimestamps receipts (stamp intentionally, don't ignore stamps once created)
+# Uncomment to ignore; leave commented to commit stamps into repo:
+# *.ots
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.env
+*.egg-info/
+dist/
+build/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Node
+node_modules/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+Desktop.ini
