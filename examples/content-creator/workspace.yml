@@ -1,0 +1,119 @@
+spec: hpk/0.1
+name: content-creator
+display_name: "Content Creator"
+version: "1.0.0"
+description: "Two-agent workspace for writing and editing viral short-form content. Uses your Claude Code subscription — zero API cost."
+author:
+  name: "Abhishek Paul"
+  email: "abhi@happen-ai.com"
+  url: "https://happen-ai.com"
+license: "proprietary"
+tags: [content, writing, social, creative]
+icon: "starter/icon.png"
+homepage: "https://happen-ai.com/packs/content-creator"
+
+provenance:
+  origin: "hub.happen-ai.com"
+  created_at: "2026-04-19T12:00:00Z"
+  updated_at: "2026-04-19T12:00:00Z"
+  signature_alg: "ed25519"
+
+requirements:
+  runtime:
+    min_version: "0.1"
+  hardware:
+    min_ram_mb: 2048
+    min_cpu_cores: 2
+    min_disk_mb: 2000
+  model:
+    compatible:
+      - "bridge/claude-code"
+      - "anthropic/claude-sonnet-4"
+      - "anthropic/claude-opus-4"
+      - "openai/gpt-4.1"
+    recommended: "bridge/claude-code"
+    min_context_window: 100000
+    requires_tool_calling: true
+  plugins:
+    python: ">=3.11"
+    system: [git]
+
+provider:
+  default: bridge/claude-code
+  allow_override: true
+
+bootstrap_prompt: |
+  1. Verify requirements (RAM, disk, python, git).
+  2. Check .env for each env_schema var; prompt user for missing.
+  3. Validate Claude Code CLI is installed and logged in (`claude --version`).
+  4. Ingest knowledge/ into local vector store.
+  5. Emit READY.
+
+channels:
+  - type: web
+    auto_open: true
+    port: 7878
+  - type: terminal
+
+plugins:
+  - id: "@happen/seo-check"
+    version: "^1.0"
+  - id: "@happen/notion"
+    version: "^1.0"
+    config:
+      token: "${NOTION_TOKEN}"
+      database_id: "${NOTION_DB_ID}"
+
+knowledge:
+  - name: "brand-voice"
+    sources:
+      - type: file
+        path: "knowledge/brand-voice.md"
+      - type: file
+        path: "knowledge/audience.md"
+    embedding_model: "sentence-transformers/bge-small-en-v1.5"
+
+agents:
+  - id: writer
+    display_name: "Writer"
+    prompt_file: "agents/writer/CLAUDE.md"
+    tools:
+      - "@happen/seo-check.analyze"
+    knowledge: ["brand-voice"]
+    params:
+      temperature: 0.8
+      max_tokens: 4096
+  - id: editor
+    display_name: "Editor"
+    prompt_file: "agents/editor/CLAUDE.md"
+    tools:
+      - "@happen/seo-check.analyze"
+      - "@happen/notion.publish"
+    knowledge: ["brand-voice"]
+    params:
+      temperature: 0.3
+      max_tokens: 2048
+
+workflow:
+  entry: writer
+  handoffs:
+    - from: writer
+      to: editor
+      condition: draft_ready
+
+starter_files:
+  - starter/examples/
+
+env_schema:
+  - name: NOTION_TOKEN
+    description: "Notion integration token (notion.so/profile/integrations)"
+    required: false
+    secret: true
+  - name: NOTION_DB_ID
+    description: "Notion database ID to publish drafts into"
+    required: false
+
+ui:
+  theme: riso
+  home_agent: writer
+  cover_image: "starter/cover.png"
