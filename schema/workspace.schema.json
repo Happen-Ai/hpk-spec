@@ -1,0 +1,397 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://happen-ai.com/schema/workspace/0.1/workspace.schema.json",
+  "title": "HPK workspace.yml",
+  "description": "JSON Schema for the HPK workspace manifest (workspace.yml). Spec: https://happen-ai.com/spec",
+  "type": "object",
+
+  "required": ["spec", "name", "display_name", "version", "agents"],
+
+  "properties": {
+
+    "spec": {
+      "type": "string",
+      "description": "HPK spec version. Must match 'hpk/{major}.{minor}'.",
+      "pattern": "^hpk/\\d+\\.\\d+$",
+      "examples": ["hpk/0.1"]
+    },
+
+    "name": {
+      "type": "string",
+      "description": "Unique pack identifier. Lowercase kebab-case.",
+      "pattern": "^[a-z][a-z0-9-]{2,39}$",
+      "examples": ["content-creator", "video-generator"]
+    },
+
+    "display_name": {
+      "type": "string",
+      "description": "Human-readable name shown in marketplace and UI.",
+      "minLength": 1,
+      "maxLength": 80
+    },
+
+    "version": {
+      "type": "string",
+      "description": "Pack version as semver.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[\\w.]+)?(\\+[\\w.]+)?$",
+      "examples": ["1.0.0", "0.2.1-beta"]
+    },
+
+    "description": {
+      "type": "string",
+      "description": "Short description of the pack.",
+      "maxLength": 500
+    },
+
+    "author": {
+      "type": "object",
+      "description": "Pack author information.",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "url": { "type": "string", "format": "uri" }
+      },
+      "additionalProperties": false
+    },
+
+    "license": {
+      "type": "string",
+      "description": "SPDX license identifier or 'proprietary'.",
+      "examples": ["MIT", "Apache-2.0", "proprietary"]
+    },
+
+    "tags": {
+      "type": "array",
+      "description": "Searchable tags for marketplace discovery.",
+      "items": { "type": "string" },
+      "uniqueItems": true,
+      "maxItems": 20
+    },
+
+    "icon": {
+      "type": "string",
+      "description": "Relative path to icon file inside the pack."
+    },
+
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the pack's homepage."
+    },
+
+    "repository": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the pack's source repository."
+    },
+
+    "provenance": {
+      "type": "object",
+      "description": "Pack origin and signature metadata.",
+      "properties": {
+        "origin": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "signature_alg": {
+          "type": "string",
+          "enum": ["ed25519"],
+          "description": "Algorithm used to sign this pack."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "requirements": {
+      "type": "object",
+      "description": "Pre-flight requirements checked by the runtime before install.",
+      "properties": {
+        "runtime": {
+          "type": "object",
+          "properties": {
+            "min_version": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "hardware": {
+          "type": "object",
+          "properties": {
+            "min_ram_mb": { "type": "integer", "minimum": 0 },
+            "min_cpu_cores": { "type": "integer", "minimum": 1 },
+            "min_disk_mb": { "type": "integer", "minimum": 0 },
+            "gpu": {
+              "oneOf": [
+                { "type": "string", "enum": ["optional", "required"] },
+                {
+                  "type": "object",
+                  "properties": {
+                    "required": { "type": "boolean" },
+                    "vram_mb": { "type": "integer", "minimum": 0 }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "model": {
+          "type": "object",
+          "properties": {
+            "compatible": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Supported model IDs in '{provider}/{model}' format."
+            },
+            "recommended": { "type": "string" },
+            "min_context_window": { "type": "integer", "minimum": 1000 },
+            "requires_tool_calling": { "type": "boolean" },
+            "requires_vision": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "plugins": {
+          "type": "object",
+          "properties": {
+            "node": { "type": "string", "description": "Node.js version range (semver)." },
+            "python": { "type": "string", "description": "Python version range." },
+            "system": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "System binaries required (checked via 'which')."
+            }
+          },
+          "additionalProperties": false
+        },
+        "network": {
+          "type": "object",
+          "properties": {
+            "egress": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Hostnames this pack will call. Informational in v0.1."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "provider": {
+      "type": "object",
+      "description": "Default LLM provider for agents in this workspace.",
+      "properties": {
+        "default": {
+          "type": "string",
+          "description": "Provider string, e.g. 'bridge/claude-code', 'anthropic/claude-sonnet-4'.",
+          "examples": ["bridge/claude-code", "anthropic/claude-sonnet-4", "openai/gpt-4.1"]
+        },
+        "allow_override": {
+          "type": "boolean",
+          "description": "If true, user may select a different provider at install time.",
+          "default": true
+        }
+      },
+      "required": ["default"],
+      "additionalProperties": false
+    },
+
+    "bootstrap_prompt": {
+      "type": "string",
+      "description": "Prompt executed by the runtime before the main agent, used for environment validation."
+    },
+
+    "channels": {
+      "type": "array",
+      "description": "Communication channels through which users interact with the workspace.",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["web", "terminal", "discord", "teams", "whatsapp", "slack"],
+            "description": "Channel type."
+          },
+          "auto_open": { "type": "boolean" },
+          "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+          "bot_token": { "type": "string" },
+          "guild_id": { "type": "string" },
+          "webhook_url": { "type": "string" },
+          "number": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+
+    "plugins": {
+      "type": "array",
+      "description": "Plugins (tools) available to agents in this workspace.",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Plugin identifier. Scoped hub (@org/name), git-URL, or local path."
+          },
+          "version": {
+            "type": "string",
+            "description": "Semver range for hub plugins."
+          },
+          "config": {
+            "type": "object",
+            "description": "Plugin configuration. Values may reference env vars as '${VAR_NAME}'.",
+            "additionalProperties": { "type": "string" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+
+    "knowledge": {
+      "type": "array",
+      "description": "Named knowledge collections available to agents via RAG.",
+      "items": {
+        "type": "object",
+        "required": ["name", "sources"],
+        "properties": {
+          "name": { "type": "string", "description": "Collection name referenced by agents." },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": { "type": "string", "enum": ["file", "url", "pdf"] },
+                "path": { "type": "string" },
+                "url": { "type": "string", "format": "uri" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "embedding_model": {
+            "type": "string",
+            "description": "Hugging Face model ID for embedding this collection."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+
+    "agents": {
+      "type": "array",
+      "description": "Agent definitions. At least one agent is required.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "display_name"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "Agent identifier. Unique within pack. Kebab-case."
+          },
+          "display_name": { "type": "string" },
+          "prompt_file": {
+            "type": "string",
+            "description": "Relative path to the agent's system prompt markdown file."
+          },
+          "tools": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Tool IDs this agent may call, in '{plugin-id}.{tool-name}' format."
+          },
+          "knowledge": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Knowledge collection names this agent has access to."
+          },
+          "params": {
+            "type": "object",
+            "description": "Model invocation parameters.",
+            "properties": {
+              "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+              "max_tokens": { "type": "integer", "minimum": 1 },
+              "top_p": { "type": "number", "minimum": 0, "maximum": 1 },
+              "top_k": { "type": "integer", "minimum": 1 }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+
+    "workflow": {
+      "type": "object",
+      "description": "Optional multi-agent handoff graph.",
+      "properties": {
+        "entry": {
+          "type": "string",
+          "description": "ID of the agent that receives the user's first message."
+        },
+        "handoffs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to", "condition"],
+            "properties": {
+              "from": { "type": "string" },
+              "to": { "type": "string" },
+              "condition": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["entry"],
+      "additionalProperties": false
+    },
+
+    "starter_files": {
+      "type": "array",
+      "description": "Paths (files or directories) to copy into the user's workspace on install.",
+      "items": { "type": "string" }
+    },
+
+    "env_schema": {
+      "type": "array",
+      "description": "Environment variables prompted at install and stored in the runtime vault.",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$",
+            "description": "Environment variable name. SCREAMING_SNAKE_CASE."
+          },
+          "description": { "type": "string" },
+          "required": { "type": "boolean", "default": true },
+          "secret": {
+            "type": "boolean",
+            "description": "If true, value is encrypted at rest and never logged.",
+            "default": false
+          },
+          "default": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+
+    "ui": {
+      "type": "object",
+      "description": "UI hints for runtime dashboard and marketplace display.",
+      "properties": {
+        "theme": { "type": "string" },
+        "home_agent": { "type": "string" },
+        "cover_image": { "type": "string" },
+        "demo_video_url": { "type": "string", "format": "uri" }
+      },
+      "additionalProperties": false
+    }
+  },
+
+  "additionalProperties": false
+}
