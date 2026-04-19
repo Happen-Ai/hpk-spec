@@ -1,0 +1,43 @@
+name: Validate spec examples
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate workspace.yml files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install jsonschema pyyaml
+
+      - name: Validate content-creator example
+        run: python scripts/validate.py examples/content-creator/workspace.yml
+
+      - name: Validate all workspace.yml files found in examples/
+        run: |
+          set -e
+          FAILED=0
+          while IFS= read -r -d '' yml; do
+            echo "Checking: $yml"
+            if ! python scripts/validate.py "$yml"; then
+              FAILED=1
+            fi
+          done < <(find examples -name "workspace.yml" -print0)
+          if [[ $FAILED -ne 0 ]]; then
+            echo "One or more workspace.yml files failed validation." >&2
+            exit 1
+          fi
+          echo "All workspace.yml files passed."
