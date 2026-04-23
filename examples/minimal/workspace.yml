@@ -1,0 +1,21 @@
+# Minimal HPK example — the smallest valid workspace.yml
+# Demonstrates the required fields only. Everything else is optional.
+
+spec: hpk/0.1
+name: hello-world
+display_name: "Hello World Agent"
+version: "1.0.0"
+description: "Minimal single-agent HPK example — the smallest valid workspace."
+author:
+  name: "HPK Authors"
+  email: "spec@happen-ai.com"
+license: MIT
+
+provider:
+  default: bridge/claude-code   # uses local Claude Code subscription; zero API cost
+  allow_override: true
+
+agents:
+  - id: greeter
+    display_name: "Greeter"
+    prompt_file: "agents/greeter/CLAUDE.md"

@@ -3,8 +3,9 @@
 > Portable AI agent workspaces in a single file.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Spec Version](https://img.shields.io/badge/spec-v0.1--draft-blue)](SPEC.md)
+[![Spec Version](https://img.shields.io/badge/spec-v0.1.0-blue)](SPEC.md)
 [![CI](https://github.com/happen-ai/hpk-spec/actions/workflows/validate.yml/badge.svg)](https://github.com/happen-ai/hpk-spec/actions/workflows/validate.yml)
+[![Timestamped with OpenTimestamps](https://img.shields.io/badge/OpenTimestamps-verified-brightgreen)](proof/)
 
 ---
 
@@ -83,7 +84,9 @@ HPK fixes this with three ideas:
 |---|---|
 | [`SPEC.md`](SPEC.md) | Authoritative format specification v0.1 |
 | [`schema/workspace.schema.json`](schema/workspace.schema.json) | JSON Schema for `workspace.yml` validation |
+| [`examples/minimal/`](examples/minimal/) | Smallest valid HPK — single agent, required fields only |
 | [`examples/content-creator/`](examples/content-creator/) | Working sample pack with two agents |
+| [`proof/`](proof/) | OpenTimestamps proof-of-existence for the v0.1 spec commit |
 | [`docs/rationale.md`](docs/rationale.md) | Why a new format is needed |
 | [`docs/comparison.md`](docs/comparison.md) | HPK vs docker-compose, LangChain, OpenAI Assistants |
 | [`docs/roadmap.md`](docs/roadmap.md) | v0.1 → v0.2 → v1.0 plan |
